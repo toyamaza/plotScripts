@@ -65,7 +65,7 @@ def extract_and_draw(diffs, name_prefix):
     draw_and_save_hist(hist_dx, (-xmax, 0, xmax, hist_dx.GetMaximum()*1.4 ), "dx", "Entries", "fig/res" + name_prefix + "_x.pdf")
     draw_and_save_hist(hist_dy, (-xmax, 0, xmax, hist_dy.GetMaximum()*1.4 ), "dy", "Entries", "fig/res" + name_prefix + "_y.pdf")
     draw_and_save_hist(hist_dz, (-xmax_big, 0, xmax_big, hist_dz.GetMaximum()*1.4 ), "dz", "Entries", "fig/res" + name_prefix + "_z.pdf")
-    draw_and_save_hist(hist_dz, (-xmax_big, 0, xmax_big, hist_dz.GetMaximum()*1.4 ), "dz", "Entries", "fig/res" + name_prefix + "_z.root")    
+    # draw_and_save_hist(hist_dz, (-xmax_big, 0, xmax_big, hist_dz.GetMaximum()*1.4 ), "dz", "Entries", "fig/res" + name_prefix + "_z.root")    
     draw_and_save_hist(hist_dr, (-xmax, 0, xmax, hist_dr.GetMaximum()*1.4 ), "dr", "Entries", "fig/res" + name_prefix + "_r.pdf")
 
 
@@ -234,6 +234,26 @@ def print_stripCluster_data(ntuple_file):
     tgOSPB_zr, tgOSPB_xy = create_tgraphs(arrOSPB_x, arrOSPB_y, arrOSPB_z, arrOSPB_r)
     tgOSPE_zr, tgOSPE_xy = create_tgraphs(arrOSPE_x, arrOSPE_y, arrOSPE_z, arrOSPE_r)
 
+    diffE_x = [diff[0] for diff in diffsE]
+    diffE_y = [diff[1] for diff in diffsE]
+    diffE_z = [diff[2] for diff in diffsE]
+    diffE_r = [diff[3] for diff in diffsE]    
+
+    diffB_x = [diff[0] for diff in diffsB]
+    diffB_y = [diff[1] for diff in diffsB]
+    diffB_z = [diff[2] for diff in diffsB]
+    diffB_r = [diff[3] for diff in diffsB]    
+
+    tgraph_diffE_xy = TPGraph(len(diffE_x), diffE_x, diffE_y)
+    tgraph_diffB_xy = TPGraph(len(diffB_x), diffB_x, diffB_y)
+
+    tgraph_diffE_zx = TPGraph(len(diffE_x), diffE_z, diffE_x)
+    tgraph_diffB_zx = TPGraph(len(diffB_x), diffB_z, diffB_x)
+    
+    tgraph_diffE_zr = TPGraph(len(diffE_x), diffE_z, diffE_r)
+    tgraph_diffB_zr = TPGraph(len(diffB_x), diffB_z, diffB_r)
+    
+
     zr_range = (-3000,0,3000,1500)
     xy_range = (-1200, -1200, 1200, 1200)
 
@@ -241,7 +261,27 @@ def print_stripCluster_data(ntuple_file):
     
     canv = ROOT.TCanvas('c1','Graphs',800,600)
 
+    def draw_and_save_tgraph(frame_range, x_title, y_title, graph, filename):
+        canv = ROOT.TCanvas('c2', 'TGraphs', 800, 600)
+        frame = ROOT.gPad.DrawFrame(*frame_range)
+        frame.GetXaxis().SetTitle(x_title)
+        frame.GetYaxis().SetTitle(y_title)
+        graph.Draw("p same")
+        canv.SaveAs(filename)
+        canv.Clear()
+    diff_xy_range = (-10, -10, 10, 10)
+    draw_and_save_tgraph(diff_xy_range, "diff_x", "diff_y", tgraph_diffE_xy, "fig/diffE_xy.pdf")
+    draw_and_save_tgraph( diff_xy_range, "diff_x", "diff_y", tgraph_diffB_xy, "fig/diffB_xy.pdf")
 
+    diff_zr_range = (-100, -10, 100, 10)
+    draw_and_save_tgraph(diff_zr_range, "diff_z", "diff_x", tgraph_diffE_zx, "fig/diffE_zx.pdf")
+    draw_and_save_tgraph( diff_zr_range, "diff_z", "diff_x", tgraph_diffB_zx, "fig/diffB_zx.pdf")
+
+    diff_zx_range = (-100, -10, 100, 10)
+    draw_and_save_tgraph(diff_zx_range, "diff_z", "diff_r", tgraph_diffE_zr, "fig/diffE_zr.pdf")
+    draw_and_save_tgraph( diff_zx_range, "diff_z", "diff_r", tgraph_diffB_zr, "fig/diffB_zr.pdf")
+
+    
     def draw_and_save(frame_range, x_title, y_title, graph, filename):
         frame = ROOT.gPad.DrawFrame(*frame_range)
         frame.GetXaxis().SetTitle(x_title)
