@@ -65,7 +65,7 @@ def extract_and_draw(diffs, name_prefix):
     draw_and_save_hist(hist_dx, (-xmax, 0, xmax, hist_dx.GetMaximum()*1.4 ), "dx", "Entries", "fig/res" + name_prefix + "_x.pdf")
     draw_and_save_hist(hist_dy, (-xmax, 0, xmax, hist_dy.GetMaximum()*1.4 ), "dy", "Entries", "fig/res" + name_prefix + "_y.pdf")
     draw_and_save_hist(hist_dz, (-xmax_big, 0, xmax_big, hist_dz.GetMaximum()*1.4 ), "dz", "Entries", "fig/res" + name_prefix + "_z.pdf")
-    # draw_and_save_hist(hist_dz, (-xmax_big, 0, xmax_big, hist_dz.GetMaximum()*1.4 ), "dz", "Entries", "fig/res" + name_prefix + "_z.root")    
+    draw_and_save_hist(hist_dz, (-xmax_big, 0, xmax_big, hist_dz.GetMaximum()*1.4 ), "dz", "Entries", "fig/res" + name_prefix + "_z.root")    
     draw_and_save_hist(hist_dr, (-xmax, 0, xmax, hist_dr.GetMaximum()*1.4 ), "dr", "Entries", "fig/res" + name_prefix + "_r.pdf")
 
 
@@ -196,6 +196,12 @@ def print_stripCluster_data(ntuple_file):
     arrTruthB_x, arrTruthB_y, arrTruthB_z, arrTruthB_r = extractGlobalPos(allTruthPositionsB)
     arrTruthE_x, arrTruthE_y, arrTruthE_z, arrTruthE_r = extractGlobalPos(allTruthPositionsE)
 
+    arrClusterB_lx, arrClusterB_ly = extractLocalPos(allClusterPositionsB)
+    arrClusterE_lx, arrClusterE_ly = extractLocalPos(allClusterPositionsE)
+    tgClusterB_local_xy = create_tgraph(arrClusterB_lx, arrClusterB_ly)
+    tgClusterE_local_xy = create_tgraph(arrClusterE_lx, arrClusterE_ly)
+    
+
     arrTruthB_lx, arrTruthB_ly = extractLocalPos(allTruthPositionsB)
     arrTruthE_lx, arrTruthE_ly = extractLocalPos(allTruthPositionsE)
     
@@ -257,7 +263,24 @@ def print_stripCluster_data(ntuple_file):
     zr_range = (-3000,0,3000,1500)
     xy_range = (-1200, -1200, 1200, 1200)
 
+    hist2D_diffE_xy = ROOT.TH2D("diffE_xy", "diffE_xy", 100, -10, 10, 100, -10, 10)
+    hist2D_diffE_zx = ROOT.TH2D("diffE_zx", "diffE_zx", 100, -100, 100, 100, -10, 10)
+    hist2D_diffE_zr = ROOT.TH2D("diffE_zr", "diffE_zr", 100, -100, 100, 100, -10, 10)
 
+    for i in range(len(diffE_x)):
+        hist2D_diffE_xy.Fill(diffE_x[i], diffE_y[i])
+        hist2D_diffE_zx.Fill(diffE_z[i], diffE_x[i])
+        hist2D_diffE_zr.Fill(diffE_z[i], diffE_r[i])
+
+    hist2D_diffB_xy = ROOT.TH2D("diffB_xy", "diffB_xy", 100, -10, 10, 100, -10, 10)
+    hist2D_diffB_zx = ROOT.TH2D("diffB_zx", "diffB_zx", 100, -100, 100, 100, -10, 10)
+    hist2D_diffB_zr = ROOT.TH2D("diffB_zr", "diffB_zr", 100, -100, 100, 100, -10, 10)
+
+    for i in range(len(diffB_x)):
+        hist2D_diffB_xy.Fill(diffB_x[i], diffB_y[i])
+        hist2D_diffB_zx.Fill(diffB_z[i], diffB_x[i])
+        hist2D_diffB_zr.Fill(diffB_z[i], diffB_r[i])
+        
     
     canv = ROOT.TCanvas('c1','Graphs',800,600)
 
@@ -306,6 +329,17 @@ def print_stripCluster_data(ntuple_file):
         canv.SaveAs(filename)
         canv.Clear()
 
+    def draw_and_save_hist2D(hist, frame_range, x_title, y_title, filename):
+        canv = ROOT.TCanvas("canv2D", "canv2D", 800, 600)
+        frame = ROOT.gPad.DrawFrame(*frame_range)
+        frame.GetXaxis().SetTitle(x_title)
+        frame.GetYaxis().SetTitle(y_title)
+        color = ROOT.kRed if 'B' in filename else ROOT.kBlue
+        hist.SetLineColor(color)
+        hist.Draw("COLZ same")  # Use "COLZ" option for 2D histograms
+        canv.SaveAs(filename)
+        canv.Clear()
+        
     def draw_and_save3(frame_range, x_title, y_title, graph1, graph2, graph3, filename):
         canv.Clear()
         canv.cd()
@@ -327,6 +361,13 @@ def print_stripCluster_data(ntuple_file):
         canv.SaveAs(filename)
 
 
+    draw_and_save_hist2D(hist2D_diffE_xy, (-10, -10, 10, 10), "diff_x", "diff_y", "fig/2D_diffE_xy.pdf")
+    draw_and_save_hist2D(hist2D_diffE_zx, (-100, -10, 100, 10), "diff_z", "diff_x", "fig/2D_diffE_zx.pdf")
+    draw_and_save_hist2D(hist2D_diffE_zr, (-100, -10, 100, 10), "diff_z", "diff_r", "fig/2D_diffE_zr.pdf")
+
+    draw_and_save_hist2D(hist2D_diffB_xy, (-10, -10, 10, 10), "diff_x", "diff_y", "fig/2D_diffB_xy.pdf")
+    draw_and_save_hist2D(hist2D_diffB_zx, (-100, -10, 100, 10), "diff_z", "diff_x", "fig/2D_diffB_zx.pdf")
+    draw_and_save_hist2D(hist2D_diffB_zr, (-100, -10, 100, 10), "diff_z", "diff_r", "fig/2D_diffB_zr.pdf")
 
     graphs_zr = [
         (tgTruthB_zr,tgTruthE_zr, "fig/truth_zr.pdf"),
@@ -367,6 +408,13 @@ def print_stripCluster_data(ntuple_file):
     draw_and_save3(local_range, "X", "Y", tgTruthB_localFound,tgTruthB_localOFound, tgTruthB_localNFound,"fig/truthB_localEff.pdf")
     local_range = (-200, 300, 200, 1000)            
     draw_and_save3(local_range, "X", "Y", tgTruthE_localFound,tgTruthE_localOFound, tgTruthE_localNFound,"fig/truthE_localEff.pdf")
+
+    local_range_B = (-80, -80, 80, 80)  # Adjust the range as needed
+    draw_and_save(local_range_B, "locX", "locY", tgClusterB_local_xy, "fig/clusterB_loc_xy.pdf")
+
+    local_range_E = (-200, 300, 200, 1000)  # Adjust the range as needed
+    draw_and_save(local_range_E, "locX", "locY", tgClusterE_local_xy, "fig/clusterE_loc_xy.pdf")
+    
     
     return
 
